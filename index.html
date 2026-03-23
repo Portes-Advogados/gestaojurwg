@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Dashboard Jurídico – W.G MACHINSKY LTDA</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f2f5;color:#2c3e50;min-height:100vh}
+header{background:#1a3a5c;color:#fff;padding:18px 36px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.header-left{display:flex;align-items:center;gap:14px}
+.logo-circle{width:46px;height:46px;background:#2e6da4;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#fff;border:2px solid rgba(255,255,255,.3)}
+.header-title{font-size:20px;font-weight:700;letter-spacing:.3px}
+.header-sub{font-size:12px;color:#a8c4e0;margin-top:2px}
+.header-right{display:flex;align-items:center;gap:14px}
+.header-date{font-size:13px;color:#a8c4e0;text-align:right}
+.header-date strong{display:block;color:#fff;font-size:15px}
+.btn-admin{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.3);color:#fff;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-admin:hover{background:rgba(255,255,255,.2)}
+#view-admin{display:none}
+main{max-width:1280px;margin:0 auto;padding:28px 24px 48px}
+.section-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:#6c7a89;margin-bottom:14px;margin-top:30px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:16px;margin-bottom:6px}
+.kpi-card{background:#fff;border-radius:10px;padding:20px 18px 16px;box-shadow:0 1px 4px rgba(0,0,0,.08);border-top:4px solid #2e6da4;transition:transform .15s,box-shadow .15s}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,0,0,.12)}
+.kpi-card.green{border-color:#27ae60}.kpi-card.orange{border-color:#e67e22}.kpi-card.red{border-color:#c0392b}.kpi-card.blue{border-color:#2e6da4}.kpi-card.purple{border-color:#8e44ad}
+.kpi-label{font-size:12px;color:#7f8c8d;font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.kpi-value{font-size:34px;font-weight:700;color:#1a3a5c;line-height:1.1;margin:6px 0 4px}
+.kpi-sub{font-size:12px;color:#95a5a6}
+.charts-row{display:grid;grid-template-columns:1.6fr 1fr;gap:16px;margin-bottom:6px}
+.chart-card{background:#fff;border-radius:10px;padding:22px 20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.chart-card h3{font-size:14px;font-weight:600;color:#2c3e50;margin-bottom:16px}
+.chart-wrap{position:relative;height:220px}
+.table-card{background:#fff;border-radius:10px;padding:22px 20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.table-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.table-card-header h3{font-size:14px;font-weight:600;color:#2c3e50}
+.search-box{padding:6px 12px;border:1px solid #dde3ec;border-radius:6px;font-size:13px;color:#2c3e50;outline:none;width:210px;transition:border-color .2s}
+.search-box:focus{border-color:#2e6da4}
+.table-scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:1150px}
+thead tr{background:#f4f6f9}
+th{padding:10px 12px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#7f8c8d;border-bottom:2px solid #e8ecf0;cursor:pointer;user-select:none}
+th:hover{color:#2e6da4}
+td{padding:10px 12px;border-bottom:1px solid #f0f2f5;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#f8fafc}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-ativo{background:#e8f5e9;color:#27ae60}.badge-encerrado{background:#ecf0f1;color:#7f8c8d}
+.badge-susponso{background:#fff3e0;color:#e67e22}.badge-recurso{background:#e3f0ff;color:#2e6da4}
+.badge-ganho{background:#e8f5e9;color:#219150}.badge-perda{background:#fdecea;color:#c0392b}
+.badge-pendente{background:#fff8e1;color:#f39c12}
+.badge-alta{background:#fdecea;color:#c0392b}.badge-media{background:#fff3e0;color:#e67e22}
+.badge-baixa{background:#e8f5e9;color:#27ae60}.badge-remota{background:#ecf0f1;color:#7f8c8d}
+.btn-pdf{background:none;border:none;cursor:pointer;padding:4px 6px;border-radius:5px;color:#c0392b;font-size:16px;transition:background .15s,transform .1s;display:inline-flex;align-items:center;justify-content:center}
+.btn-pdf:hover{background:#fdecea;transform:scale(1.15)}
+.pagination{display:flex;align-items:center;justify-content:space-between;margin-top:16px;font-size:12px;color:#95a5a6}
+.pagination-btns{display:flex;gap:6px}
+.pagination-btns button{padding:5px 12px;border:1px solid #dde3ec;border-radius:5px;background:#fff;color:#2c3e50;cursor:pointer;font-size:12px;transition:background .15s}
+.pagination-btns button:hover,.pagination-btns button.active{background:#2e6da4;color:#fff;border-color:#2e6da4}
+
+/* ADMIN */
+.admin-header{background:#1a3a5c;color:#fff;padding:16px 36px;display:flex;align-items:center;justify-content:space-between}
+.btn-back{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:rgba(255,255,255,.1);border:1.5px solid rgba(255,255,255,.3);color:#fff;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s}
+.btn-back:hover{background:rgba(255,255,255,.2)}
+.admin-main{max-width:900px;margin:0 auto;padding:36px 24px}
+.admin-card{background:#fff;border-radius:12px;padding:28px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:20px}
+.admin-card h3{font-size:15px;font-weight:700;color:#1a3a5c;margin-bottom:6px}
+.admin-card p{font-size:13px;color:#5d6d7e;margin-bottom:20px;line-height:1.5}
+.import-zone{border:2px dashed #b0bec5;border-radius:10px;padding:36px 24px;text-align:center;transition:border-color .2s,background .2s;cursor:pointer}
+.import-zone:hover{border-color:#2e6da4;background:#f0f6ff}
+.import-zone .iz-icon{font-size:40px;margin-bottom:10px}
+.import-zone .iz-title{font-size:15px;font-weight:600;color:#1a3a5c;margin-bottom:4px}
+.import-zone .iz-sub{font-size:12px;color:#7f8c8d}
+.btn-import{display:inline-flex;align-items:center;gap:7px;padding:10px 22px;border-radius:7px;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:background .15s,transform .1s;margin-top:16px}
+.btn-import:active{transform:scale(.97)}
+.btn-primary{background:#2e6da4;color:#fff}.btn-primary:hover{background:#245d8e}
+.btn-danger{background:#c0392b;color:#fff}.btn-danger:hover{background:#a93226}
+.btn-success{background:#27ae60;color:#fff}.btn-success:hover{background:#1e8449}
+#fileInput,#pdfAndamentoInput{display:none}
+.import-status{font-size:13px;padding:8px 16px;border-radius:8px;display:none;margin-top:14px}
+.import-status.ok{background:#e8f5e9;color:#27ae60;display:block}
+.import-status.err{background:#fdecea;color:#c0392b;display:block}
+.admin-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:20px}
+.astat{background:#f4f6f9;border-radius:8px;padding:16px;text-align:center}
+.astat-val{font-size:28px;font-weight:700;color:#1a3a5c}
+.astat-label{font-size:12px;color:#7f8c8d;margin-top:2px}
+.col-map-table{width:100%;font-size:12px;border-collapse:collapse;margin-top:14px}
+.col-map-table th{background:#f4f6f9;padding:7px 10px;text-align:left;font-weight:600;color:#5d6d7e;border-bottom:1px solid #e8ecf0}
+.col-map-table td{padding:6px 10px;border-bottom:1px solid #f0f2f5;color:#2c3e50}
+.col-map-table tr:last-child td{border:none}
+.col-num{display:inline-block;width:22px;height:22px;background:#2e6da4;color:#fff;border-radius:50%;font-size:10px;font-weight:700;text-align:center;line-height:22px;margin-right:4px}
+
+/* ANDAMENTO IMPORT */
+.andamento-form{display:flex;flex-direction:column;gap:14px;margin-top:4px}
+.andamento-select-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.form-group{display:flex;flex-direction:column;gap:5px;flex:1;min-width:200px}
+.form-label{font-size:12px;font-weight:600;color:#5d6d7e;text-transform:uppercase;letter-spacing:.4px}
+.form-select{padding:9px 12px;border:1.5px solid #dde3ec;border-radius:7px;font-size:13px;color:#2c3e50;outline:none;background:#fff;transition:border-color .2s;cursor:pointer}
+.form-select:focus{border-color:#2e6da4}
+.upload-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.upload-label{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;background:#f4f6f9;border:1.5px dashed #b0bec5;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:#5d6d7e;transition:all .2s;flex:1;min-width:200px}
+.upload-label:hover{background:#f0f6ff;border-color:#2e6da4;color:#2e6da4}
+.upload-label.has-file{background:#e8f5e9;border-color:#27ae60;color:#219150}
+.andamento-list{margin-top:16px}
+.andamento-list-title{font-size:12px;font-weight:700;color:#5d6d7e;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.andamento-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#f8fafc;border-radius:8px;border:1px solid #e8ecf0;margin-bottom:8px}
+.andamento-item-left{display:flex;align-items:center;gap:10px}
+.andamento-item-icon{font-size:20px}
+.andamento-item-proc{font-size:12px;font-weight:700;color:#2e6da4;font-family:monospace}
+.andamento-item-name{font-size:12px;color:#7f8c8d;margin-top:1px}
+.andamento-item-right{display:flex;gap:8px;align-items:center}
+.btn-tiny{padding:5px 12px;border-radius:5px;font-size:12px;font-weight:600;cursor:pointer;border:none}
+.btn-tiny-view{background:#e3f0ff;color:#2e6da4}.btn-tiny-view:hover{background:#cce0f7}
+.btn-tiny-del{background:#fdecea;color:#c0392b}.btn-tiny-del:hover{background:#f9d4cf}
+.andamento-empty{text-align:center;padding:20px;color:#b0bec5;font-size:13px}
+
+/* MODAL SENHA */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:1000}
+.modal-overlay.show{display:flex}
+.modal-box{background:#fff;border-radius:12px;padding:36px;width:360px;box-shadow:0 8px 32px rgba(0,0,0,.18);text-align:center}
+.modal-box h3{font-size:18px;font-weight:700;color:#1a3a5c;margin-bottom:8px}
+.modal-box p{font-size:13px;color:#7f8c8d;margin-bottom:20px}
+.modal-input{width:100%;padding:10px 14px;border:1.5px solid #dde3ec;border-radius:7px;font-size:15px;text-align:center;letter-spacing:4px;outline:none;transition:border-color .2s}
+.modal-input:focus{border-color:#2e6da4}
+.modal-btns{display:flex;gap:10px;margin-top:16px}
+.modal-btns button{flex:1;padding:10px;border-radius:7px;font-size:14px;font-weight:600;cursor:pointer;border:none}
+.btn-modal-ok{background:#2e6da4;color:#fff}.btn-modal-ok:hover{background:#245d8e}
+.btn-modal-cancel{background:#f0f2f5;color:#2c3e50}.btn-modal-cancel:hover{background:#e0e4ea}
+.modal-err{font-size:12px;color:#c0392b;margin-top:8px;display:none}
+
+/* PDF MODAL */
+.pdf-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:2000}
+.pdf-modal-overlay.show{display:flex}
+.pdf-modal-box{background:#fff;border-radius:12px;width:820px;max-width:96vw;max-height:92vh;display:flex;flex-direction:column;box-shadow:0 12px 48px rgba(0,0,0,.25)}
+.pdf-modal-header{display:flex;align-items:center;justify-content:space-between;padding:16px 22px;border-bottom:1px solid #e8ecf0}
+.pdf-modal-header h3{font-size:15px;font-weight:700;color:#1a3a5c}
+.pdf-modal-actions{display:flex;gap:8px}
+.btn-sm{padding:7px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none}
+.btn-sm-primary{background:#2e6da4;color:#fff}.btn-sm-primary:hover{background:#245d8e}
+.btn-sm-green{background:#27ae60;color:#fff}.btn-sm-green:hover{background:#1e8449}
+.btn-sm-close{background:#f0f2f5;color:#2c3e50}.btn-sm-close:hover{background:#e0e4ea}
+.pdf-modal-body{overflow-y:auto;padding:32px;flex:1}
+
+/* PDF REPORT */
+.pdf-report{font-family:'Segoe UI',Arial,sans-serif;max-width:720px;margin:0 auto}
+.pdf-report-header{background:#1a3a5c;color:#fff;padding:28px 32px;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:space-between}
+.pdf-logo{width:52px;height:52px;background:#2e6da4;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;border:2px solid rgba(255,255,255,.3)}
+.pdf-header-info h1{font-size:20px;font-weight:700;margin-bottom:3px}
+.pdf-header-info p{font-size:12px;color:#a8c4e0}
+.pdf-header-right{text-align:right;font-size:12px;color:#a8c4e0}
+.pdf-header-right strong{display:block;color:#fff;font-size:14px;margin-bottom:2px}
+.pdf-body{border:1px solid #e8ecf0;border-top:none;border-radius:0 0 10px 10px;overflow:hidden}
+.pdf-section{padding:20px 28px;border-bottom:1px solid #f0f2f5}
+.pdf-section:last-child{border-bottom:none}
+.pdf-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#2e6da4;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.pdf-section-title::after{content:'';flex:1;height:1px;background:#e8ecf0}
+.pdf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pdf-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.pdf-field{background:#f8fafc;border-radius:6px;padding:10px 14px}
+.pdf-field-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#95a5a6;margin-bottom:3px}
+.pdf-field-value{font-size:13px;font-weight:600;color:#1a3a5c}
+.pdf-field-value.mono{font-family:monospace;font-size:12px;color:#2e6da4}
+.pdf-field.full{grid-column:1/-1}
+.pdf-risk-bar{display:flex;align-items:center;gap:10px;margin-top:6px}
+.pdf-risk-dot{width:10px;height:10px;border-radius:50%}
+.pdf-footer{background:#f4f6f9;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#95a5a6;border-top:1px solid #e8ecf0}
+
+/* PÁGINA 2 — ANDAMENTO */
+.pdf-page-break{border:none;border-top:2px dashed #dde3ec;margin:28px 0;position:relative}
+.pdf-page-break::before{content:'Página 2 — Relatório de Andamento';position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#fff;padding:0 12px;font-size:10px;color:#b0bec5;white-space:nowrap}
+.pdf-page2-header{background:#2e6da4;color:#fff;padding:18px 28px;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:space-between}
+.pdf-page2-header h2{font-size:16px;font-weight:700}
+.pdf-page2-header span{font-size:11px;color:#a8c4e0}
+.pdf-page2-body{border:1px solid #e8ecf0;border-top:none;border-radius:0 0 10px 10px;padding:24px 28px;background:#fff}
+.andamento-btn-area{text-align:center;padding:20px}
+.btn-ver-andamento{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:#2e6da4;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;transition:background .2s,transform .1s;text-decoration:none}
+.btn-ver-andamento:hover{background:#245d8e;transform:translateY(-1px)}
+.btn-ver-andamento .btn-icon{font-size:20px}
+.andamento-meta{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap}
+.andamento-meta-item{display:flex;align-items:center;gap:6px;font-size:12px;color:#7f8c8d}
+.no-andamento{text-align:center;padding:24px;color:#b0bec5}
+.no-andamento .na-icon{font-size:32px;margin-bottom:8px}
+.no-andamento p{font-size:13px}
+
+footer{text-align:center;font-size:11px;color:#b0bec5;margin-top:36px;padding-bottom:16px}
+@media(max-width:900px){.charts-row{grid-template-columns:1fr}}
+@media(max-width:600px){header{flex-direction:column;align-items:flex-start;gap:10px}.kpi-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- MODAL SENHA -->
+<div class="modal-overlay" id="modalSenha">
+  <div class="modal-box">
+    <div style="font-size:36px;margin-bottom:12px">🔐</div>
+    <h3>Área Administrativa</h3>
+    <p>Digite a senha para acessar o painel de administração</p>
+    <input class="modal-input" type="password" id="senhaInput" placeholder="••••••" maxlength="20" onkeydown="if(event.key==='Enter')verificarSenha()"/>
+    <div class="modal-err" id="senhaErr">Senha incorreta. Tente novamente.</div>
+    <div class="modal-btns">
+      <button class="btn-modal-cancel" onclick="fecharModalSenha()">Cancelar</button>
+      <button class="btn-modal-ok" onclick="verificarSenha()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PDF -->
+<div class="pdf-modal-overlay" id="pdfModal">
+  <div class="pdf-modal-box">
+    <div class="pdf-modal-header">
+      <h3 id="pdfModalTitle">Relatório do Processo</h3>
+      <div class="pdf-modal-actions">
+        <button class="btn-sm btn-sm-primary" onclick="imprimirPDF()">🖨️ Imprimir / Salvar PDF</button>
+        <button class="btn-sm btn-sm-close" onclick="fecharPDF()">✕ Fechar</button>
+      </div>
+    </div>
+    <div class="pdf-modal-body" id="pdfModalBody"></div>
+  </div>
+</div>
+
+<!-- VIEW DASHBOARD -->
+<div id="view-dashboard">
+<header>
+  <div class="header-left">
+    <div class="logo-circle">WG</div>
+    <div>
+      <div class="header-title">Dashboard Jurídico</div>
+      <div class="header-sub">W.G MACHINSKY LTDA</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-date"><strong id="data-atual"></strong>Atualizado hoje</div>
+    <button class="btn-admin" onclick="abrirModalSenha()">⚙️ Área Admin</button>
+  </div>
+</header>
+<main>
+  <div class="section-title">Visão Geral</div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);max-width:1040px;margin:0 auto 6px">
+    <div class="kpi-card blue"><div class="kpi-label">Total de Processos</div><div class="kpi-value" id="kpi-total">0</div><div class="kpi-sub">Carteira ativa</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Processos Ativos</div><div class="kpi-value" id="kpi-ativos">0</div><div class="kpi-sub">Em andamento</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Risco Alto</div><div class="kpi-value" id="kpi-risco">0</div><div class="kpi-sub">Possibilidade de perda alta</div></div>
+    <div class="kpi-card orange"><div class="kpi-label">Acordo</div><div class="kpi-value" id="kpi-acordo">0</div><div class="kpi-sub">Processos em acordo</div></div>
+  </div>
+  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);max-width:780px;margin:12px auto 6px">
+    <div class="kpi-card red"><div class="kpi-label">Arquivado Definitivamente</div><div class="kpi-value" id="kpi-arquivado">0</div><div class="kpi-sub">Processos encerrados</div></div>
+    <div class="kpi-card green"><div class="kpi-label">Resultados Favoráveis</div><div class="kpi-value" id="kpi-ganhos">0</div><div class="kpi-sub">Processos ganhos</div></div>
+    <div class="kpi-card red"><div class="kpi-label">Resultados Desfavoráveis</div><div class="kpi-value" id="kpi-desfavoraveis">0</div><div class="kpi-sub">Processos perdidos</div></div>
+  </div>
+  <div class="section-title">Análise</div>
+  <div class="charts-row">
+    <div class="chart-card"><h3>Processos por Matéria Trabalhista</h3><div class="chart-wrap"><canvas id="chartTipo"></canvas></div></div>
+    <div class="chart-card"><h3>Status da Carteira</h3><div class="chart-wrap"><canvas id="chartStatus"></canvas></div></div>
+  </div>
+  <div class="chart-card" style="margin-bottom:6px">
+    <h3>Processos por Advogado da Parte Contrária</h3>
+    <div id="chartAdvogadosWrap" class="chart-wrap" style="height:340px"><canvas id="chartAdvogados"></canvas></div>
+  </div>
+  <div class="section-title">Processos</div>
+  <div class="table-card">
+    <div class="table-card-header">
+      <h3>Lista de Processos</h3>
+      <input class="search-box" id="searchInput" type="text" placeholder="🔍  Buscar processo, vara, assunto…" oninput="filtrar()"/>
+    </div>
+    <div class="table-scroll">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:36px"></th>
+          <th onclick="sortTable(0)">Nº do Processo ↕</th>
+          <th onclick="sortTable(1)">Reclamante ↕</th>
+          <th onclick="sortTable(14)">Tipo ↕</th>
+          <th onclick="sortTable(2)">Reclamada ↕</th>
+          <th onclick="sortTable(6)">Valor da Causa ↕</th>
+          <th onclick="sortTable(3)">Descrição ↕</th>
+          <th onclick="sortTable(17)">Cidade ↕</th>
+          <th onclick="sortTable(11)">Instância ↕</th>
+          <th onclick="sortTable(18)">Tribunal ↕</th>
+          <th onclick="sortTable(8)">Status ↕</th>
+          <th onclick="sortTable(7)">Fase ↕</th>
+          <th onclick="sortTable(5)">Adv. Outra Parte ↕</th>
+          <th onclick="sortTable(12)">Poss. Perda ↕</th>
+          <th onclick="sortTable(9)">Arquivamento ↕</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaBody"></tbody>
+    </table>
+    </div>
+    <div class="pagination">
+      <span id="paginacao-info"></span>
+      <div class="pagination-btns" id="paginacao-btns"></div>
+    </div>
+  </div>
+</main>
+<footer>Dashboard Jurídico · W.G MACHINSKY LTDA · Gerado em <span id="footer-data"></span></footer>
+</div>
+
+<!-- VIEW ADMIN -->
+<div id="view-admin">
+  <div class="admin-header">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="logo-circle">WG</div>
+      <div>
+        <div style="font-size:18px;font-weight:700">Área Administrativa</div>
+        <div style="font-size:12px;color:#a8c4e0">W.G MACHINSKY LTDA</div>
+      </div>
+    </div>
+    <button class="btn-back" onclick="voltarDashboard()">← Voltar ao Dashboard</button>
+  </div>
+  <div class="admin-main">
+
+    <!-- STATS -->
+    <div class="admin-card">
+      <h3>📊 Resumo da Base de Dados</h3>
+      <p>Visão geral dos processos atualmente carregados no sistema.</p>
+      <div class="admin-stats">
+        <div class="astat"><div class="astat-val" id="adm-total">0</div><div class="astat-label">Total de Processos</div></div>
+        <div class="astat"><div class="astat-val" id="adm-ativos">0</div><div class="astat-label">Processos Ativos</div></div>
+        <div class="astat"><div class="astat-val" id="adm-andamentos">0</div><div class="astat-label">Com Andamento Anexado</div></div>
+      </div>
+    </div>
+
+    <!-- IMPORTAR EXCEL -->
+    <div class="admin-card">
+      <h3>📂 Importar Planilha de Processos (.xlsx)</h3>
+      <p>Faça upload de uma planilha <strong>.xlsx</strong> com os dados dos processos. Os dados existentes serão substituídos.</p>
+      <div class="import-zone" onclick="document.getElementById('fileInput').click()">
+        <div class="iz-icon">📥</div>
+        <div class="iz-title">Clique para selecionar o arquivo</div>
+        <div class="iz-sub">Formatos aceitos: .xlsx · .xls</div>
+        <button class="btn-import btn-primary" style="pointer-events:none">Selecionar Arquivo .xlsx</button>
+      </div>
+      <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="importarExcel(event)"/>
+      <div class="import-status" id="importStatus"></div>
+      <div style="margin-top:22px">
+        <div style="font-size:13px;font-weight:600;color:#1a3a5c;margin-bottom:8px">📋 Ordem das colunas na planilha</div>
+        <table class="col-map-table">
+          <thead><tr><th>Coluna</th><th>Campo</th><th>Coluna</th><th>Campo</th></tr></thead>
+          <tbody>
+            <tr><td><span class="col-num">A</span>Número Processo</td><td style="color:#5d6d7e">Nº do processo</td><td><span class="col-num">J</span>Instância</td><td style="color:#5d6d7e">1ª ou 2ª instância</td></tr>
+            <tr><td><span class="col-num">B</span>Outra(s) Parte(s)</td><td style="color:#5d6d7e">Reclamante</td><td><span class="col-num">K</span>Tribunal</td><td style="color:#5d6d7e">TRT-2, TRT-9…</td></tr>
+            <tr><td><span class="col-num">C</span>Tipo do Processo</td><td style="color:#5d6d7e">Reclamação, Ação…</td><td><span class="col-num">L</span>Status do Processo</td><td style="color:#5d6d7e">Ativo, Encerrado…</td></tr>
+            <tr><td><span class="col-num">D</span>Conta/Ident. Cliente</td><td style="color:#5d6d7e">Reclamada</td><td><span class="col-num">M</span>Segredo de Justiça</td><td style="color:#5d6d7e">SIM / NÃO</td></tr>
+            <tr><td><span class="col-num">E</span>Valor Causa/Projeto</td><td style="color:#5d6d7e">Valor em R$</td><td><span class="col-num">N</span>Fase do Projeto</td><td style="color:#5d6d7e">Instrução, Recurso…</td></tr>
+            <tr><td><span class="col-num">F</span>Descrição</td><td style="color:#5d6d7e">Matéria principal</td><td><span class="col-num">O</span>Advogado Outra Parte</td><td style="color:#5d6d7e">Nome do advogado</td></tr>
+            <tr><td><span class="col-num">G</span>Número Vara</td><td style="color:#5d6d7e">Nº da vara</td><td><span class="col-num">P</span>Possibilidade de Perda</td><td style="color:#5d6d7e">Alta / Média / Baixa</td></tr>
+            <tr><td><span class="col-num">H</span>Código Vara</td><td style="color:#5d6d7e">Código da vara</td><td><span class="col-num">Q</span>Justificativa</td><td style="color:#5d6d7e">Justificativa de perda</td></tr>
+            <tr><td><span class="col-num">I</span>Cidade</td><td style="color:#5d6d7e">Cidade do processo</td><td><span class="col-num">R</span>Arquivamento Definitivo</td><td style="color:#5d6d7e">Data ou —</td></tr>
+            <tr><td colspan="2"></td><td><span class="col-num">S</span>Classificação</td><td style="color:#5d6d7e">Classificação do processo</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- IMPORTAR PDF ANDAMENTO -->
+    <div class="admin-card">
+      <h3>📎 Importar Relatório de Andamento (PDF)</h3>
+      <p>Vincule um PDF de andamento a um processo pelo número do processo. O PDF ficará disponível na <strong>Página 2</strong> do relatório individual do cliente. Se já houver um andamento, ele será substituído.</p>
+
+      <div class="andamento-form">
+        <div class="andamento-select-row">
+          <div class="form-group">
+            <label class="form-label">Selecione o Processo</label>
+            <select class="form-select" id="selectProcesso">
+              <option value="">— Selecione um processo —</option>
+            </select>
+          </div>
+        </div>
+        <div class="upload-row">
+          <label class="upload-label" id="uploadLabel" for="pdfAndamentoInput">
+            <span>📄</span>
+            <span id="uploadLabelText">Clique para selecionar o PDF de andamento</span>
+          </label>
+          <input type="file" id="pdfAndamentoInput" accept=".pdf" onchange="onPdfSelecionado(event)"/>
+          <button class="btn-import btn-success" onclick="vincularAndamento()" style="margin-top:0">✔ Vincular ao Processo</button>
+        </div>
+        <div class="import-status" id="andamentoStatus"></div>
+      </div>
+
+      <!-- Lista de andamentos vinculados -->
+      <div class="andamento-list" id="andamentoList"></div>
+    </div>
+
+    <!-- LIMPAR -->
+    <div class="admin-card">
+      <h3>🗑️ Limpar Base de Dados</h3>
+      <p>Remove todos os processos e andamentos carregados. Esta ação não pode ser desfeita.</p>
+      <button class="btn-import btn-danger" onclick="limparDados()">🗑️ Limpar todos os processos</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const hoje = new Date();
+const opts = {day:'2-digit',month:'long',year:'numeric'};
+const dataStr = hoje.toLocaleDateString('pt-BR',opts);
+document.getElementById('data-atual').textContent = dataStr;
+document.getElementById('footer-data').textContent = dataStr;
+
+// ── DADOS ──
+const processos = [
+  ['0001234-55.2023.5.02.0001','João Pereira da Silva','Alpha Comércio Ltda','Verbas Rescisórias','1 – São Paulo (TRT-2)','Dr. Carlos Melo','R$ 48.500,00','Instrução','Ativo','—','Pendente','1ª Instância','Média','Trabalhista','Reclamação Trabalhista','1','VT0001','São Paulo','TRT-2','Não','—'],
+  ['0002341-12.2022.5.02.0002','Maria Aparecida Souza','Beta Transportes Eireli','Horas Extras','2 – São Paulo (TRT-2)','Dra. Ana Figueiredo','R$ 32.000,00','Conciliação','Ativo','—','Pendente','1ª Instância','Baixa','Trabalhista','Reclamação Trabalhista','2','VT0002','São Paulo','TRT-2','Não','—'],
+  ['0003456-78.2021.5.09.0001','Pedro Henrique Lima','Gamma Serviços Ltda','Reconh. de Vínculo','1 – Curitiba (TRT-9)','Dr. Roberto Campos','R$ 85.000,00','Recurso Ordinário','Em Recurso','—','Pendente','2ª Instância','Alta','Trabalhista','Reclamação Trabalhista','1','VT0003','Curitiba','TRT-9','Não','Ausência de registro formal'],
+  ['0004567-90.2020.5.02.0003','Antônia Ferreira Costa','Delta Ind. e Com. Ltda','Verbas Rescisórias','3 – São Paulo (TRT-2)','Dr. Fábio Duarte','R$ 27.300,00','Encerrado','Encerrado','15/01/2024','Ganho','1ª Instância','Remota','Trabalhista','Reclamação Trabalhista','3','VT0004','São Paulo','TRT-2','Não','—'],
+  ['0005678-11.2023.5.02.0004','Raimundo Oliveira Neto','Epsilon Construções S.A.','Acidente de Trabalho','4 – São Paulo (TRT-2)','Dra. Paula Ribeiro','R$ 210.000,00','Instrução','Ativo','—','Pendente','1ª Instância','Alta','Trabalhista','Ação Acidentária','4','VT0005','São Paulo','TRT-2','Não','Laudo médico contestado'],
+  ['0006789-22.2022.5.09.0002','Francisca Alves Mendes','Zeta Logística Eireli','Horas Extras','2 – Curitiba (TRT-9)','Dr. Marcos Vieira','R$ 41.200,00','Sentença','Ativo','—','Pendente','1ª Instância','Média','Trabalhista','Reclamação Trabalhista','2','VT0006','Curitiba','TRT-9','Não','—'],
+  ['0007890-33.2021.5.04.0001','José Carlos Barbosa','Eta Alimentos S.A.','Assédio Moral','1 – Porto Alegre (TRT-4)','Dr. Lucas Moreira','R$ 60.000,00','Recurso Ordinário','Em Recurso','—','Pendente','2ª Instância','Média','Trabalhista','Reclamação Trabalhista','1','VT0007','Porto Alegre','TRT-4','Não','—'],
+  ['0008901-44.2020.5.02.0005','Sandra Regina Pinto','Theta Tecnologia Ltda','Reconh. de Vínculo','5 – São Paulo (TRT-2)','Dra. Célia Castro','R$ 95.000,00','Arquivado Definitivamente','Arquivado Definitivamente','10/06/2023','Perda','1ª Instância','—','Trabalhista','Reclamação Trabalhista','5','VT0008','São Paulo','TRT-2','Não','—'],
+  ['0009012-55.2023.5.15.0001','Luís Fernando Gomes','Iota Varejo Ltda','Verbas Rescisórias','1 – Campinas (TRT-15)','Dr. André Bittencourt','R$ 38.700,00','Instrução','Ativo','—','Pendente','1ª Instância','Baixa','Trabalhista','Reclamação Trabalhista','1','VT0009','Campinas','TRT-15','Não','—'],
+  ['0010123-66.2022.5.02.0006','Teresinha Nascimento','Kappa Ind. Ltda','Equiparação Salarial','6 – São Paulo (TRT-2)','Dr. Sérgio Almeida','R$ 55.000,00','Suspenso','Suspenso','—','Pendente','1ª Instância','Média','Trabalhista','Reclamação Trabalhista','6','VT0010','São Paulo','TRT-2','Não','—'],
+];
+
+// andamentos: { [nºProcesso]: { nome, url, dataVinculo } }
+const andamentos = {};
+let pdfSelecionadoFile = null;
+
+const statusBadge={Ativo:'badge-ativo',Encerrado:'badge-encerrado',Suspenso:'badge-susponso','Em Recurso':'badge-recurso','Arquivado Definitivamente':'badge-encerrado'};
+const perdaBadge={Alta:'badge-alta',Média:'badge-media',Baixa:'badge-baixa',Remota:'badge-remota'};
+
+// ── TABELA ──
+const POR_PAGINA=8;
+let paginaAtual=1,dadosFiltrados=[...processos];
+
+function renderTabela(){
+  const inicio=(paginaAtual-1)*POR_PAGINA,fim=inicio+POR_PAGINA;
+  const pagina=dadosFiltrados.slice(inicio,fim);
+  document.getElementById('tabelaBody').innerHTML=pagina.map(p=>`
+    <tr>
+      <td style="text-align:center">
+        <button class="btn-pdf" onclick="abrirPDF(${processos.indexOf(p)})" title="Ver relatório do processo">📄</button>
+      </td>
+      <td style="font-family:monospace;font-size:11px;color:#2e6da4;font-weight:600;white-space:nowrap">${p[0]}</td>
+      <td style="white-space:nowrap">${p[1]}</td>
+      <td style="font-size:12px;color:#5d6d7e;white-space:nowrap">${p[14]||'—'}</td>
+      <td style="font-size:12px;color:#5d6d7e;white-space:nowrap">${p[2]}</td>
+      <td style="font-weight:600;color:#1a3a5c;white-space:nowrap">${p[6]}</td>
+      <td style="font-size:12px">${p[3]}</td>
+      <td style="font-size:12px;color:#5d6d7e;white-space:nowrap">${p[17]||'—'}</td>
+      <td><span class="badge" style="background:#f0f4ff;color:#34495e;white-space:nowrap">${p[11]||'—'}</span></td>
+      <td style="font-size:12px;color:#5d6d7e;white-space:nowrap">${p[18]||'—'}</td>
+      <td><span class="badge ${statusBadge[p[8]]||''}">${p[8]}</span></td>
+      <td><span class="badge" style="background:#f0f4ff;color:#34495e;white-space:nowrap">${p[7]}</span></td>
+      <td style="font-size:12px;color:#7f8c8d;white-space:nowrap">${p[5]}</td>
+      <td>${(p[12]&&p[12]!=='—')?`<span class="badge ${perdaBadge[p[12]]||''}">${p[12]}</span>`:'—'}</td>
+      <td style="font-size:12px;color:#5d6d7e;white-space:nowrap">${p[9]}</td>
+    </tr>
+  `).join('');
+  const total=dadosFiltrados.length,totalPag=Math.ceil(total/POR_PAGINA)||1;
+  document.getElementById('paginacao-info').textContent=`Exibindo ${Math.min(inicio+1,total)}–${Math.min(fim,total)} de ${total} processos`;
+  const btns=document.getElementById('paginacao-btns');btns.innerHTML='';
+  for(let i=1;i<=totalPag;i++){const b=document.createElement('button');b.textContent=i;if(i===paginaAtual)b.classList.add('active');b.onclick=()=>{paginaAtual=i;renderTabela()};btns.appendChild(b)}
+}
+function filtrar(){
+  const q=document.getElementById('searchInput').value.toLowerCase();
+  dadosFiltrados=processos.filter(p=>p.some(v=>String(v).toLowerCase().includes(q)));
+  paginaAtual=1;renderTabela();
+}
+let sortDir={};
+function sortTable(col){
+  sortDir[col]=!sortDir[col];
+  dadosFiltrados.sort((a,b)=>{const av=String(a[col]||'').toLowerCase(),bv=String(b[col]||'').toLowerCase();return sortDir[col]?av.localeCompare(bv,'pt'):bv.localeCompare(av,'pt')});
+  renderTabela();
+}
+
+// ── PDF RELATÓRIO ──
+function abrirPDF(idx){
+  const p=processos[idx];if(!p)return;
+  const riskColor={Alta:'#c0392b',Média:'#e67e22',Baixa:'#27ae60',Remota:'#95a5a6'};
+  const statusColor={Ativo:'#27ae60','Em Recurso':'#2e6da4',Encerrado:'#7f8c8d',Suspenso:'#e67e22','Arquivado Definitivamente':'#7f8c8d'};
+  const rc=riskColor[p[12]]||'#95a5a6',sc=statusColor[p[8]]||'#7f8c8d';
+  const segredo=p[19]==='SIM'||p[19]==='1';
+  const and=andamentos[p[0]];
+
+  // Página 2 — andamento
+  let pag2='';
+  if(and){
+    pag2=`
+      <hr class="pdf-page-break"/>
+      <div class="pdf-page2-header">
+        <h2>📎 Relatório de Andamento</h2>
+        <span>Processo ${p[0]}</span>
+      </div>
+      <div class="pdf-page2-body">
+        <div style="background:#f0f6ff;border-radius:8px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:28px">📄</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#1a3a5c">${and.nome}</div>
+            <div style="font-size:12px;color:#7f8c8d;margin-top:2px">Vinculado em ${and.dataVinculo}</div>
+          </div>
+        </div>
+        <div class="andamento-btn-area">
+          <a class="btn-ver-andamento" href="${and.url}" target="_blank" rel="noopener">
+            <span class="btn-icon">📂</span>
+            Abrir Relatório de Andamento
+          </a>
+          <div class="andamento-meta">
+            <div class="andamento-meta-item">📋 Documento oficial do processo</div>
+            <div class="andamento-meta-item">🔗 Abre em nova aba</div>
+            <div class="andamento-meta-item">📅 ${and.dataVinculo}</div>
+          </div>
+        </div>
+      </div>`;
+  } else {
+    pag2=`
+      <hr class="pdf-page-break"/>
+      <div class="pdf-page2-header">
+        <h2>📎 Relatório de Andamento</h2>
+        <span>Processo ${p[0]}</span>
+      </div>
+      <div class="pdf-page2-body">
+        <div class="no-andamento">
+          <div class="na-icon">📭</div>
+          <p>Nenhum relatório de andamento vinculado a este processo.</p>
+          <p style="margin-top:6px;font-size:11px;color:#c0bec5">O administrador pode adicionar o andamento na Área Admin.</p>
+        </div>
+      </div>`;
+  }
+
+  document.getElementById('pdfModalTitle').textContent=`Relatório — Processo ${p[0]}`;
+  document.getElementById('pdfModalBody').innerHTML=`
+<div class="pdf-report" id="pdfContent">
+  <div class="pdf-report-header">
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="pdf-logo">WG</div>
+      <div class="pdf-header-info">
+        <h1>W.G MACHINSKY LTDA</h1>
+        <p>Relatório Individual de Processo</p>
+        <p style="margin-top:2px;color:#7fb3d3">Advocacia Trabalhista</p>
+      </div>
+    </div>
+    <div class="pdf-header-right">
+      <strong>Data de Emissão</strong>
+      ${dataStr}
+      ${segredo?'<div style="margin-top:8px;background:#c0392b;color:#fff;padding:4px 10px;border-radius:4px;font-size:10px;font-weight:700;letter-spacing:1px">🔒 SEGREDO DE JUSTIÇA</div>':''}
+    </div>
+  </div>
+  <div class="pdf-body">
+    <div class="pdf-section">
+      <div class="pdf-section-title">Identificação do Processo</div>
+      <div class="pdf-grid">
+        <div class="pdf-field full"><div class="pdf-field-label">Número do Processo</div><div class="pdf-field-value mono">${p[0]}</div></div>
+        <div class="pdf-field"><div class="pdf-field-label">Tipo do Processo</div><div class="pdf-field-value">${p[14]||'—'}</div></div>
+        <div class="pdf-field"><div class="pdf-field-label">Classificação</div><div class="pdf-field-value">${p[13]||'—'}</div></div>
+        <div class="pdf-field"><div class="pdf-field-label">Matéria / Descrição</div><div class="pdf-field-value">${p[3]||'—'}</div></div>
+        <div class="pdf-field"><div class="pdf-field-label">Valor da Causa</div><div class="pdf-field-value" style="color:#1a3a5c;font-size:15px">${p[6]||'—'}</div></div>
+      </div>
+    </div>
+    <div class="pdf-section">
+      <div class="pdf-section-title">Partes Envolvidas</div>
+      <div class="pdf-grid">
+        <div class="pdf-field"><div class="pdf-field-label">Reclamante</div><div class="pdf-field-value">${p[1]||'—'}</div></div>
+        <div class="pdf-field"><div class="pdf-field-label">Reclamada</div><div class="pdf-field-value">${p[2]||'—'}</div></div>
+        <div class="pdf-field full"><div class="pdf-field-label">Advogado da Outra Parte</div><div class="pdf-field-value">${p[5]||'—'}</div></div>
+      </div>
+    </div>
+    <div class="pdf-section">
+      <div class="pdf-section-title">Tramitação</div>
+      <div class="pdf-grid-3">
+        <div class="pdf-field"><div class="pdf-field-label">Nº da Vara</div><div class="pdf-field-value">${p[15]||'—'}</div></div>
+        <div class="pdf-field"><div class="pdf-field-label">Cidade</div><div class="pdf-field-value">${p[17]||'—'}</div></div>
+        <div class="pdf-field"><div class="pdf-field-label">Tribunal</div><div class="pdf-field-value">${p[18]||'—'}</div></div>
+        <div class="pdf-field"><div class="pdf-field-label">Instância</div><div class="pdf-field-value">${p[11]||'—'}</div></div>
+        <div class="pdf-field"><div class="pdf-field-label">Fase Processual</div><div class="pdf-field-value">${p[7]||'—'}</div></div>
+        <div class="pdf-field"><div class="pdf-field-label">Arquivamento</div><div class="pdf-field-value">${p[9]||'—'}</div></div>
+      </div>
+    </div>
+    <div class="pdf-section">
+      <div class="pdf-section-title">Status e Análise de Risco</div>
+      <div class="pdf-grid">
+        <div class="pdf-field">
+          <div class="pdf-field-label">Status Atual</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+            <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${sc}"></span>
+            <span style="font-size:13px;font-weight:700;color:${sc}">${p[8]||'—'}</span>
+          </div>
+        </div>
+        <div class="pdf-field">
+          <div class="pdf-field-label">Possibilidade de Perda</div>
+          <div class="pdf-risk-bar">
+            <div class="pdf-risk-dot" style="background:${rc}"></div>
+            <span style="font-size:13px;font-weight:700;color:${rc}">${p[12]||'—'}</span>
+          </div>
+        </div>
+        ${(p[20]&&p[20]!=='—')?`<div class="pdf-field full"><div class="pdf-field-label">Justificativa de Risco</div><div class="pdf-field-value" style="color:#5d6d7e;font-weight:400">${p[20]}</div></div>`:''}
+      </div>
+    </div>
+  </div>
+  <div class="pdf-footer">
+    <span>W.G MACHINSKY LTDA · Documento gerado em ${dataStr}</span>
+    <span style="color:#b0bec5">Uso exclusivo do cliente · Não substitui documentos oficiais</span>
+  </div>
+  ${pag2}
+</div>`;
+  document.getElementById('pdfModal').classList.add('show');
+}
+
+function fecharPDF(){document.getElementById('pdfModal').classList.remove('show')}
+
+function imprimirPDF(){
+  const conteudo=document.getElementById('pdfContent').innerHTML;
+  const win=window.open('','_blank','width=900,height=700');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Relatório WG Machinsky</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',Arial,sans-serif;color:#2c3e50;background:#fff;padding:20px}
+    .pdf-report{max-width:760px;margin:0 auto}
+    .pdf-report-header{background:#1a3a5c;color:#fff;padding:28px 32px;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:space-between}
+    .pdf-logo{width:52px;height:52px;background:#2e6da4;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#fff;border:2px solid rgba(255,255,255,.3)}
+    .pdf-header-info h1{font-size:20px;font-weight:700;margin-bottom:3px}.pdf-header-info p{font-size:12px;color:#a8c4e0}
+    .pdf-header-right{text-align:right;font-size:12px;color:#a8c4e0}.pdf-header-right strong{display:block;color:#fff;font-size:14px;margin-bottom:2px}
+    .pdf-body{border:1px solid #e8ecf0;border-top:none;border-radius:0 0 10px 10px;overflow:hidden}
+    .pdf-section{padding:20px 28px;border-bottom:1px solid #f0f2f5}.pdf-section:last-child{border-bottom:none}
+    .pdf-section-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#2e6da4;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+    .pdf-section-title::after{content:'';flex:1;height:1px;background:#e8ecf0}
+    .pdf-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.pdf-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .pdf-field{background:#f8fafc;border-radius:6px;padding:10px 14px}.pdf-field.full{grid-column:1/-1}
+    .pdf-field-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:#95a5a6;margin-bottom:3px}
+    .pdf-field-value{font-size:13px;font-weight:600;color:#1a3a5c}.pdf-field-value.mono{font-family:monospace;font-size:12px;color:#2e6da4}
+    .pdf-risk-bar{display:flex;align-items:center;gap:10px;margin-top:6px}.pdf-risk-dot{width:10px;height:10px;border-radius:50%}
+    .pdf-footer{background:#f4f6f9;padding:14px 28px;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:#95a5a6;border-top:1px solid #e8ecf0}
+    .pdf-page-break{border:none;border-top:2px dashed #dde3ec;margin:28px 0;position:relative}
+    .pdf-page-break::before{content:'Página 2 — Relatório de Andamento';position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:#fff;padding:0 12px;font-size:10px;color:#b0bec5;white-space:nowrap}
+    .pdf-page2-header{background:#2e6da4;color:#fff;padding:18px 28px;border-radius:10px 10px 0 0;display:flex;align-items:center;justify-content:space-between}
+    .pdf-page2-header h2{font-size:16px;font-weight:700}.pdf-page2-header span{font-size:11px;color:#a8c4e0}
+    .pdf-page2-body{border:1px solid #e8ecf0;border-top:none;border-radius:0 0 10px 10px;padding:24px 28px;background:#fff}
+    .andamento-btn-area{text-align:center;padding:20px}
+    .btn-ver-andamento{display:inline-flex;align-items:center;gap:10px;padding:14px 28px;background:#2e6da4;color:#fff;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none}
+    .andamento-meta{display:flex;gap:16px;margin-top:14px;flex-wrap:wrap;justify-content:center}
+    .andamento-meta-item{font-size:12px;color:#7f8c8d}
+    .no-andamento{text-align:center;padding:24px;color:#b0bec5}.no-andamento .na-icon{font-size:32px;margin-bottom:8px}.no-andamento p{font-size:13px}
+    @media print{body{padding:0}@page{margin:15mm}}
+  </style></head><body>${conteudo}</body></html>`);
+  win.document.close();
+  setTimeout(()=>{win.focus();win.print()},400);
+}
+
+// ── ANDAMENTO ──
+function onPdfSelecionado(e){
+  const f=e.target.files[0];
+  if(!f)return;
+  pdfSelecionadoFile=f;
+  const lbl=document.getElementById('uploadLabel');
+  lbl.classList.add('has-file');
+  document.getElementById('uploadLabelText').textContent=`✔ ${f.name}`;
+}
+
+function vincularAndamento(){
+  const sel=document.getElementById('selectProcesso').value;
+  const st=document.getElementById('andamentoStatus');
+  st.className='import-status';st.textContent='';
+  if(!sel){st.textContent='⚠ Selecione um processo primeiro.';st.className='import-status err';return}
+  if(!pdfSelecionadoFile){st.textContent='⚠ Selecione um arquivo PDF.';st.className='import-status err';return}
+
+  // Revogar URL anterior se existir
+  if(andamentos[sel]&&andamentos[sel].url)URL.revokeObjectURL(andamentos[sel].url);
+
+  const url=URL.createObjectURL(pdfSelecionadoFile);
+  const agora=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  andamentos[sel]={nome:pdfSelecionadoFile.name,url,dataVinculo:agora};
+
+  st.textContent=`✓ PDF "${pdfSelecionadoFile.name}" vinculado ao processo ${sel}`;
+  st.className='import-status ok';
+
+  // Reset form
+  pdfSelecionadoFile=null;
+  document.getElementById('pdfAndamentoInput').value='';
+  document.getElementById('uploadLabel').classList.remove('has-file');
+  document.getElementById('uploadLabelText').textContent='Clique para selecionar o PDF de andamento';
+
+  renderAndamentoList();
+  atualizarAdminStats();
+}
+
+function removerAndamento(num){
+  if(!confirm(`Remover andamento do processo ${num}?`))return;
+  if(andamentos[num]&&andamentos[num].url)URL.revokeObjectURL(andamentos[num].url);
+  delete andamentos[num];
+  renderAndamentoList();
+  atualizarAdminStats();
+}
+
+function renderAndamentoList(){
+  const el=document.getElementById('andamentoList');
+  const keys=Object.keys(andamentos);
+  if(!keys.length){el.innerHTML='<div class="andamento-empty">📭 Nenhum andamento vinculado ainda.</div>';return}
+  el.innerHTML=`<div class="andamento-list-title">Andamentos vinculados (${keys.length})</div>`+
+    keys.map(num=>`
+      <div class="andamento-item">
+        <div class="andamento-item-left">
+          <span class="andamento-item-icon">📄</span>
+          <div>
+            <div class="andamento-item-proc">${num}</div>
+            <div class="andamento-item-name">${andamentos[num].nome} · ${andamentos[num].dataVinculo}</div>
+          </div>
+        </div>
+        <div class="andamento-item-right">
+          <button class="btn-tiny btn-tiny-view" onclick="window.open('${andamentos[num].url}','_blank')">👁 Ver</button>
+          <button class="btn-tiny btn-tiny-del" onclick="removerAndamento('${num}')">✕</button>
+        </div>
+      </div>`).join('');
+}
+
+function popularSelectProcessos(){
+  const sel=document.getElementById('selectProcesso');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">— Selecione um processo —</option>'+
+    processos.map(p=>`<option value="${p[0]}">${p[0]} · ${p[1]}</option>`).join('');
+  if(cur)sel.value=cur;
+}
+
+// ── MODAL SENHA ──
+const ADMIN_PASS='wgadmin2025';
+function abrirModalSenha(){
+  document.getElementById('senhaInput').value='';
+  document.getElementById('senhaErr').style.display='none';
+  document.getElementById('modalSenha').classList.add('show');
+  setTimeout(()=>document.getElementById('senhaInput').focus(),100);
+}
+function fecharModalSenha(){document.getElementById('modalSenha').classList.remove('show')}
+function verificarSenha(){
+  if(document.getElementById('senhaInput').value===ADMIN_PASS){
+    fecharModalSenha();abrirAdmin();
+  }else{
+    document.getElementById('senhaErr').style.display='block';
+    document.getElementById('senhaInput').value='';
+    document.getElementById('senhaInput').focus();
+  }
+}
+function abrirAdmin(){
+  document.getElementById('view-dashboard').style.display='none';
+  document.getElementById('view-admin').style.display='block';
+  popularSelectProcessos();
+  renderAndamentoList();
+  atualizarAdminStats();
+}
+function voltarDashboard(){
+  document.getElementById('view-admin').style.display='none';
+  document.getElementById('view-dashboard').style.display='block';
+}
+function atualizarAdminStats(){
+  document.getElementById('adm-total').textContent=processos.length;
+  document.getElementById('adm-ativos').textContent=processos.filter(p=>p[8]==='Ativo').length;
+  document.getElementById('adm-andamentos').textContent=Object.keys(andamentos).length;
+}
+
+// ── IMPORTAR EXCEL ──
+function importarExcel(event){
+  const file=event.target.files[0];if(!file)return;
+  const status=document.getElementById('importStatus');
+  status.className='import-status';status.textContent='';
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      if(!rows.length)throw new Error('Planilha vazia.');
+      const get=(row,i)=>String(row[i]??'').trim()||'—';
+      const novos=[];
+      for(let r=0;r<rows.length;r++){
+        const row=rows[r];if(!String(row[0]??'').trim())continue;
+        const proc=Array(21).fill('—');
+        proc[0]=get(row,0);  // Col A → Nº Processo
+        proc[1]=get(row,1);  // Col B → Reclamante
+        proc[14]=get(row,2); // Col C → Tipo do Processo
+        proc[2]=get(row,3);  // Col D → Reclamada
+        proc[6]=get(row,4);  // Col E → Valor da Causa
+        proc[3]=get(row,5);  // Col F → Matéria/Descrição ← gráfico usa este
+        proc[15]=get(row,6); // Col G → Nº Vara
+        proc[16]=get(row,7); // Col H → Código Vara
+        proc[17]=get(row,8); // Col I → Cidade
+        proc[11]=get(row,9); // Col J → Instância
+        proc[18]=get(row,10);// Col K → Tribunal
+        proc[8]=get(row,11); // Col L → Status
+        const sr=row[12],ss=String(sr??'').trim().toLowerCase();
+        proc[19]=(Number(sr)===1||ss==='1'||ss==='sim'||ss==='true')?'SIM':'NÃO';
+        proc[7]=get(row,13);proc[5]=get(row,14);proc[12]=get(row,15);
+        proc[20]=get(row,16);proc[9]=get(row,17);proc[13]=get(row,18);
+        const partes=[proc[15]!=='—'?proc[15]:proc[16],proc[17]].filter(v=>v&&v!=='—');
+        let varaStr=partes.join(' – ');
+        if(proc[18]!=='—')varaStr+=varaStr?` (${proc[18]})`:proc[18];
+        proc[4]=varaStr||'—';
+        novos.push(proc);
+      }
+      if(!novos.length)throw new Error('Nenhuma linha encontrada.');
+      processos.length=0;novos.forEach(p=>processos.push(p));
+      dadosFiltrados=[...processos];paginaAtual=1;
+      renderTabela();atualizarKPIs();atualizarGraficos();
+      popularSelectProcessos();atualizarAdminStats();
+      status.textContent=`✓ ${novos.length} processos importados com sucesso!`;
+      status.className='import-status ok';
+    }catch(err){status.textContent='✗ Erro: '+err.message;status.className='import-status err'}
+    event.target.value='';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function limparDados(){
+  if(!confirm('Remover todos os processos e andamentos?'))return;
+  processos.length=0;Object.keys(andamentos).forEach(k=>{if(andamentos[k].url)URL.revokeObjectURL(andamentos[k].url);delete andamentos[k]});
+  dadosFiltrados=[];paginaAtual=1;
+  renderTabela();atualizarKPIs();atualizarGraficos();popularSelectProcessos();renderAndamentoList();atualizarAdminStats();
+}
+
+// ── KPIs ──
+function atualizarKPIs(){
+  const total=processos.length;
+  const ativos=processos.filter(p=>String(p[8]).trim()==='Ativo').length;
+  const arquivado=processos.filter(p=>String(p[8]).trim()==='Encerrado').length;
+  const recurso=processos.filter(p=>String(p[7]).trim()==='Recurso').length;
+  const riscoAlto=processos.filter(p=>String(p[20]).trim()==='Revelia').length;
+  const ganhos=processos.filter(p=>{const s=String(p[13]).trim().toLowerCase();return s==='procedência'||s==='parcial procedência'||s==='procedencia'||s==='parcial procedencia'}).length;
+  const desfavoraveis=processos.filter(p=>String(p[13]).trim().toLowerCase()==='improcedente').length;
+  const acordo=processos.filter(p=>String(p[13]).trim().toLowerCase()==='acordo').length;
+  const ids=['kpi-total','kpi-ativos','kpi-arquivado','kpi-risco','kpi-ganhos','kpi-desfavoraveis','kpi-acordo'];
+  const vals=[total,ativos,arquivado,riscoAlto,ganhos,desfavoraveis,acordo];
+  ids.forEach((id,i)=>{const el=document.getElementById(id);if(el)el.textContent=vals[i]});
+}
+
+// ── GRÁFICOS ──
+function atualizarGraficos(){
+  // Coluna G da planilha = índice 6 na importação = proc[3] (Descrição/Matéria)
+  const materias={};processos.forEach(p=>{const m=p[3]||'Outros';materias[m]=(materias[m]||0)+1});
+  const labelsM=Object.keys(materias),dataM=labelsM.map(l=>materias[l]);
+  const sc={'Conhecimento':0,'Em Recurso':0,'Execução':0,'Suspenso':0,'Encerrado':0};
+  processos.forEach(p=>{
+    if(String(p[8]).trim()==='Encerrado') sc['Encerrado']++;
+    else { const s=String(p[7]).trim(); if(sc[s]!==undefined) sc[s]++; }
+  });
+  const advCount={};processos.forEach(p=>{const a=(p[5]&&p[5]!=='—')?p[5]:'Não informado';advCount[a]=(advCount[a]||0)+1});
+  const advOrd=Object.entries(advCount).sort((a,b)=>b[1]-a[1]);
+  const labelsAdv=advOrd.map(e=>e[0]),dataAdv=advOrd.map(e=>e[1]);
+  const pal=['#2e6da4','#3498db','#1abc9c','#c0392b','#8e44ad','#e67e22','#27ae60','#f39c12','#16a085','#e74c3c'];
+  const coresAdv=labelsAdv.map((_,i)=>pal[i%pal.length]);
+  document.getElementById('chartAdvogadosWrap').style.height=Math.max(340,labelsAdv.length*22)+'px';
+  ['chartAdvogados','chartTipo','chartStatus'].forEach(id=>Chart.getChart(id)?.destroy());
+  new Chart(document.getElementById('chartAdvogados'),{type:'doughnut',data:{labels:labelsAdv,datasets:[{data:dataAdv,backgroundColor:coresAdv,borderWidth:2,borderColor:'#fff',hoverOffset:8}]},options:{responsive:true,maintainAspectRatio:false,cutout:'55%',plugins:{legend:{position:'right',labels:{font:{size:11},padding:10,boxWidth:12,generateLabels:c=>c.data.labels.map((l,i)=>({text:`${l}  (${c.data.datasets[0].data[i]})`,fillStyle:c.data.datasets[0].backgroundColor[i],strokeStyle:'#fff',lineWidth:2,index:i}))}},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed} processo${ctx.parsed!==1?'s':''}`}}}}});
+  new Chart(document.getElementById('chartTipo'),{type:'bar',data:{labels:labelsM,datasets:[{label:'Processos',data:dataM,backgroundColor:['#2e6da4','#3498db','#1abc9c','#c0392b','#8e44ad','#e67e22','#95a5a6','#f39c12','#16a085'],borderRadius:6,borderSkipped:false}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#f0f2f5'},ticks:{font:{size:11}}},x:{grid:{display:false},ticks:{font:{size:10},maxRotation:30}}}}});
+  new Chart(document.getElementById('chartStatus'),{type:'doughnut',data:{labels:Object.keys(sc),datasets:[{data:Object.values(sc),backgroundColor:['#27ae60','#2e6da4','#f1c40f','#e67e22','#c0392b'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{font:{size:12},padding:14,boxWidth:12}}}}});
+}
+
+// INIT
+renderTabela();atualizarKPIs();atualizarGraficos();
+</script>
+</body>
+</html>
