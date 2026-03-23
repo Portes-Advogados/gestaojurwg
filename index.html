@@ -237,15 +237,15 @@ footer{text-align:center;font-size:11px;color:#b0bec5;margin-top:36px;padding-bo
 </header>
 <main>
   <div class="section-title">Visão Geral</div>
-  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);max-width:1040px;margin:0 auto 6px">
+  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);max-width:780px;margin:0 auto 6px">
     <div class="kpi-card blue"><div class="kpi-label">Total de Processos</div><div class="kpi-value" id="kpi-total">0</div><div class="kpi-sub">Carteira ativa</div></div>
     <div class="kpi-card green"><div class="kpi-label">Processos Ativos</div><div class="kpi-value" id="kpi-ativos">0</div><div class="kpi-sub">Em andamento</div></div>
     <div class="kpi-card red"><div class="kpi-label">Risco Alto</div><div class="kpi-value" id="kpi-risco">0</div><div class="kpi-sub">Possibilidade de perda alta</div></div>
-    <div class="kpi-card orange"><div class="kpi-label">Acordo</div><div class="kpi-value" id="kpi-acordo">0</div><div class="kpi-sub">Processos em acordo</div></div>
   </div>
-  <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);max-width:780px;margin:12px auto 6px">
+  <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);max-width:1040px;margin:12px auto 6px">
     <div class="kpi-card red"><div class="kpi-label">Arquivado Definitivamente</div><div class="kpi-value" id="kpi-arquivado">0</div><div class="kpi-sub">Processos encerrados</div></div>
     <div class="kpi-card green"><div class="kpi-label">Resultados Favoráveis</div><div class="kpi-value" id="kpi-ganhos">0</div><div class="kpi-sub">Processos ganhos</div></div>
+    <div class="kpi-card orange"><div class="kpi-label">Acordo</div><div class="kpi-value" id="kpi-acordo">0</div><div class="kpi-sub">Processos em acordo</div></div>
     <div class="kpi-card red"><div class="kpi-label">Resultados Desfavoráveis</div><div class="kpi-value" id="kpi-desfavoraveis">0</div><div class="kpi-sub">Processos perdidos</div></div>
   </div>
   <div class="section-title">Análise</div>
@@ -843,34 +843,47 @@ function atualizarGraficos(){
   new Chart(document.getElementById('chartStatus'),{type:'doughnut',data:{labels:Object.keys(sc),datasets:[{data:Object.values(sc),backgroundColor:['#27ae60','#2e6da4','#f1c40f','#e67e22','#c0392b'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{font:{size:12},padding:14,boxWidth:12}}}}});
 }
 
-// ── LOCAL STORAGE ──
-const LS_KEY = 'wg_processos';
+// ── SUPABASE ──
+const SB_URL  = 'https://xdougqvdukehxyvhpamm.supabase.co';
+const SB_KEY  = 'sb_publishable_VO0JLG8e7n2qfiJipyxclg_j3zI0fRZ';
+const SB_HEADERS = {
+  'Content-Type': 'application/json',
+  'apikey': SB_KEY,
+  'Authorization': 'Bearer ' + SB_KEY
+};
 
-function salvarDados(){
-  try{ localStorage.setItem(LS_KEY, JSON.stringify(processos)); }
-  catch(e){ console.warn('Erro ao salvar:', e); }
+async function salvarDados(){
+  try{
+    await fetch(`${SB_URL}/rest/v1/processos?id=eq.1`, {
+      method: 'PATCH',
+      headers: SB_HEADERS,
+      body: JSON.stringify({ dados: processos, atualizado_em: new Date().toISOString() })
+    });
+  } catch(e){ console.warn('Erro ao salvar no Supabase:', e); }
 }
 
-function carregarDados(){
+async function carregarDados(){
   try{
-    const raw = localStorage.getItem(LS_KEY);
-    if(!raw) return false;
-    const saved = JSON.parse(raw);
-    if(!Array.isArray(saved) || !saved.length) return false;
+    const res = await fetch(`${SB_URL}/rest/v1/processos?id=eq.1&select=dados`, {
+      headers: SB_HEADERS
+    });
+    const json = await res.json();
+    if(!json.length || !json[0].dados || !json[0].dados.length) return false;
     processos.length = 0;
-    saved.forEach(p => processos.push(p));
+    json[0].dados.forEach(p => processos.push(p));
     return true;
   } catch(e){ return false; }
 }
 
-// INIT — carrega dados salvos ou usa dados padrão
-const carregou = carregarDados();
-dadosFiltrados = [...processos];
-renderTabela();atualizarKPIs();atualizarGraficos();
-
-if(carregou){
-  console.log(`✓ ${processos.length} processos carregados do armazenamento local.`);
-}
+// INIT — carrega dados do Supabase
+(async()=>{
+  // mostra indicador de carregamento
+  document.getElementById('kpi-total').textContent = '...';
+  const carregou = await carregarDados();
+  dadosFiltrados = [...processos];
+  renderTabela();atualizarKPIs();atualizarGraficos();
+  if(carregou) console.log(`✓ ${processos.length} processos carregados do Supabase.`);
+})();
 </script>
 </body>
 </html>
