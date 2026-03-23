@@ -787,9 +787,10 @@ function importarExcel(event){
       if(!novos.length)throw new Error('Nenhuma linha encontrada.');
       processos.length=0;novos.forEach(p=>processos.push(p));
       dadosFiltrados=[...processos];paginaAtual=1;
+      salvarDados();
       renderTabela();atualizarKPIs();atualizarGraficos();
       popularSelectProcessos();atualizarAdminStats();
-      status.textContent=`✓ ${novos.length} processos importados com sucesso!`;
+      status.textContent=`✓ ${novos.length} processos importados e salvos com sucesso!`;
       status.className='import-status ok';
     }catch(err){status.textContent='✗ Erro: '+err.message;status.className='import-status err'}
     event.target.value='';
@@ -800,6 +801,7 @@ function importarExcel(event){
 function limparDados(){
   if(!confirm('Remover todos os processos e andamentos?'))return;
   processos.length=0;Object.keys(andamentos).forEach(k=>{if(andamentos[k].url)URL.revokeObjectURL(andamentos[k].url);delete andamentos[k]});
+  localStorage.removeItem(LS_KEY);
   dadosFiltrados=[];paginaAtual=1;
   renderTabela();atualizarKPIs();atualizarGraficos();popularSelectProcessos();renderAndamentoList();atualizarAdminStats();
 }
@@ -841,8 +843,34 @@ function atualizarGraficos(){
   new Chart(document.getElementById('chartStatus'),{type:'doughnut',data:{labels:Object.keys(sc),datasets:[{data:Object.values(sc),backgroundColor:['#27ae60','#2e6da4','#f1c40f','#e67e22','#c0392b'],borderWidth:2,borderColor:'#fff',hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom',labels:{font:{size:12},padding:14,boxWidth:12}}}}});
 }
 
-// INIT
+// ── LOCAL STORAGE ──
+const LS_KEY = 'wg_processos';
+
+function salvarDados(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(processos)); }
+  catch(e){ console.warn('Erro ao salvar:', e); }
+}
+
+function carregarDados(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return false;
+    const saved = JSON.parse(raw);
+    if(!Array.isArray(saved) || !saved.length) return false;
+    processos.length = 0;
+    saved.forEach(p => processos.push(p));
+    return true;
+  } catch(e){ return false; }
+}
+
+// INIT — carrega dados salvos ou usa dados padrão
+const carregou = carregarDados();
+dadosFiltrados = [...processos];
 renderTabela();atualizarKPIs();atualizarGraficos();
+
+if(carregou){
+  console.log(`✓ ${processos.length} processos carregados do armazenamento local.`);
+}
 </script>
 </body>
 </html>
